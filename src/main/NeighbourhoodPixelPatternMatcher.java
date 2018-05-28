@@ -7,12 +7,16 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Class capable of determining if a pixel within an image is part of a
- * pre-supplied texture.
+ * PixelPatternMatcher that "learns" the composition of a background texture so
+ * that it knows, for each possible pixel colour, which neighbouring pixels to
+ * expect, if the given pixel is indeed part of the background.
+ * 
+ * It can then make a decision as to whether the pixel belongs to the
+ * background, using a configurable strictness setting.
  * 
  * @author Dan Bryce
  */
-public class PixelPattern {
+public class NeighbourhoodPixelPatternMatcher implements PixelPatternMatcher {
 
     /**
      * Class that specifies a set of acceptable pixel colours for each
@@ -30,8 +34,8 @@ public class PixelPattern {
     }
 
     /**
-     * Number of neighbouring pixels that must match this pattern's texture
-     * before a pixel will be removed.
+     * Number of neighbouring pixels that must match the background texture
+     * before a pixel will be matched.
      */
     private int strictness;
 
@@ -41,12 +45,12 @@ public class PixelPattern {
     private Map<Integer, ValidNeighbours> entries = new HashMap<>();
 
     /**
-     * Creates a PixelPattern from the given image.
+     * Creates a NeighbourhoodPixelPatternMatcher from the given image.
      * 
      * @param image
      * @param strictness
      */
-    public PixelPattern(BufferedImage image, int strictness) {
+    public NeighbourhoodPixelPatternMatcher(BufferedImage image, int strictness) {
 
         // Loop over the image, ignoring edge pixels
         for (int y = 1; y < image.getHeight() - 1; y++) {
@@ -78,15 +82,7 @@ public class PixelPattern {
 
         System.out.println("Pattern contains " + entries.size() + " colours");
     }
-    
-    /**
-     * Determines if the given pixel is part of this pattern's texture.
-     * 
-     * @param image
-     * @param x
-     * @param y
-     * @return
-     */
+
     public boolean matches(BufferedImage image, int x, int y) {
 
         int col = image.getRGB(x, y);

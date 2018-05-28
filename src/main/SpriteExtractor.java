@@ -101,9 +101,9 @@ public class SpriteExtractor {
     private static final int MIN_SPRITE_HEIGHT = 4;
 
     /**
-     * PixelPattern used to match the background texture.
+     * PixelPatternMatcher used to match the background texture.
      */
-    private PixelPattern pattern;
+    private PixelPatternMatcher pattern;
 
     /**
      * Ignored left margin of the input image (pixels).
@@ -134,7 +134,8 @@ public class SpriteExtractor {
      * @param borderRight
      * @param borderBottom
      */
-    public SpriteExtractor(PixelPattern pattern,
+    public SpriteExtractor(
+            PixelPatternMatcher pattern,
             int borderLeft,
             int borderTop,
             int borderRight,
@@ -315,8 +316,14 @@ public class SpriteExtractor {
     public static void main(String[] args) {
         
         if (args.length < 7) {
-            System.out.println(
-                    "Expected: BG_IMAGE SOURCE_FOLDER STRICTNESS BORDERS");
+            System.out.println("Expected: " +
+                    "BG_IMAGE " +
+                    "SOURCE_FOLDER " +
+                    "STRICTNESS " +
+                    "BORDER_LEFT " +
+                    "BORDER_TOP " +
+                    "BORDER_RIGHT " + 
+                    "BORDER_BOTTOM");
             System.exit(-1);
         }
 
@@ -333,14 +340,26 @@ public class SpriteExtractor {
             int borderRight  = Integer.parseInt(args[5]);
             int borderBottom = Integer.parseInt(args[6]);
             
-            // Read and parse background texture
             System.out.println("Reading background texture");
             BufferedImage bgImage = ImageIO.read(new File(bgFilename));
-            System.out.println("Producing pattern");
-            PixelPattern pixelPattern = new PixelPattern(bgImage, strictness);
+
+            System.out.println("Producing pattern matcher");
+            PixelPatternMatcher pattern;
+            if (strictness == -1) {
+                pattern = new ExactPixelPatternMatcher(
+                        bgImage,
+                        borderLeft,
+                        borderTop,
+                        borderRight,
+                        borderBottom);
+            } else {
+                pattern = new NeighbourhoodPixelPatternMatcher(
+                        bgImage,
+                        strictness);
+            }
             
             se = new SpriteExtractor(
-                    pixelPattern,
+                    pattern,
                     borderLeft,
                     borderTop,
                     borderRight,
