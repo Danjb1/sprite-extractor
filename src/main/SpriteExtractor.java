@@ -32,7 +32,7 @@ public class SpriteExtractor {
     /**
      * Flags used for debugging purposes.
      */
-    private static final class DebugFlags {
+    public static final class DebugFlags {
         
         /**
          * If set, no sprites will be saved.
@@ -41,6 +41,20 @@ public class SpriteExtractor {
          * identified sprite regions framed in red.
          */
         public static final boolean DRAW_SPRITE_BORDERS = false;
+
+        /**
+         * If set, pixels that match the background but do not have the required
+         * number of valid neighbours will have their colour changed according
+         * to HIGHLIGHT_COLOUR.
+         * 
+         * Only applicable in EXACT mode.
+         */
+        public static final boolean HIGHLIGHT_UNCERTAIN_PIXELS = false;
+
+        /**
+         * Colour used with HIGHLIGHT_UNCERTAIN_PIXELS.
+         */
+        public static final int HIGHLIGHT_COLOUR = 0xffff00ff;
     }
     
     /**
@@ -156,7 +170,8 @@ public class SpriteExtractor {
     private List<BufferedImage> process(BufferedImage image) {
         
         // Cut the image to the part we are interested in
-        BufferedImage subImage = image.getSubimage(
+        BufferedImage subImage = ImageUtils.copySubimage(
+                image,
                 borderLeft,
                 borderTop,
                 image.getWidth() - (borderLeft + borderRight),
@@ -190,8 +205,8 @@ public class SpriteExtractor {
      */
     private BufferedImage clearBackgroundPixels(BufferedImage image) {
 
-        // We need to keep the original image in-tact so that our pattern
-        // can check the pixels!
+        // We need to keep the original image in-tact so that our pattern can
+        // check the pixels!
         BufferedImage newImage = ImageUtils.copyImage(image);
         
         // Ignore edge pixels as the pattern won't work on them
@@ -200,7 +215,12 @@ public class SpriteExtractor {
 
                 if (pattern.matches(image, x, y)) {
                     newImage.setRGB(x, y, BG_COLOUR);
+                    
+                } else if (DebugFlags.HIGHLIGHT_UNCERTAIN_PIXELS &&
+                        image.getRGB(x, y) == DebugFlags.HIGHLIGHT_COLOUR) {
+                    newImage.setRGB(x, y, DebugFlags.HIGHLIGHT_COLOUR);
                 }
+
             }
         }
         
@@ -315,10 +335,11 @@ public class SpriteExtractor {
      */
     public static void main(String[] args) {
         
-        if (args.length < 7) {
+        if (args.length < 8) {
             System.out.println("Expected: " +
                     "BG_IMAGE " +
                     "SOURCE_FOLDER " +
+                    "MODE " +
                     "STRICTNESS " +
                     "BORDER_LEFT " +
                     "BORDER_TOP " +
@@ -333,29 +354,34 @@ public class SpriteExtractor {
         String imageDir = args[1];
         
         try {
-            
-            int strictness   = Integer.parseInt(args[2]);
-            int borderLeft   = Integer.parseInt(args[3]);
-            int borderTop    = Integer.parseInt(args[4]);
-            int borderRight  = Integer.parseInt(args[5]);
-            int borderBottom = Integer.parseInt(args[6]);
+
+            int mode         = Integer.parseInt(args[2]);
+            int strictness   = Integer.parseInt(args[3]);
+            int borderLeft   = Integer.parseInt(args[4]);
+            int borderTop    = Integer.parseInt(args[5]);
+            int borderRight  = Integer.parseInt(args[6]);
+            int borderBottom = Integer.parseInt(args[7]);
             
             System.out.println("Reading background texture");
             BufferedImage bgImage = ImageIO.read(new File(bgFilename));
 
             System.out.println("Producing pattern matcher");
-            PixelPatternMatcher pattern;
-            if (strictness == -1) {
+            PixelPatternMatcher pattern = null;
+            if (mode == 0) {
                 pattern = new ExactPixelPatternMatcher(
                         bgImage,
+                        strictness,
                         borderLeft,
                         borderTop,
                         borderRight,
                         borderBottom);
-            } else {
+            } else if (mode == 1) {
                 pattern = new NeighbourhoodPixelPatternMatcher(
                         bgImage,
                         strictness);
+            } else {
+                System.out.println("Mode must be 0 (exact) or 1 (smart)");
+                System.exit(1);
             }
             
             se = new SpriteExtractor(

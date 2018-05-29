@@ -1,6 +1,7 @@
 package main;
 
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -160,6 +161,32 @@ public final class ImageUtils {
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
         return new String(hexChars);
+    }
+
+    /**
+     * Produces a sub-image of the given image in the ARGB colour model.
+     * 
+     * @param image
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @return
+     */
+    public static BufferedImage copySubimage(BufferedImage image, int x, int y,
+            int width, int height) {
+        
+        BufferedImage newImage = new BufferedImage(width, height,
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = newImage.createGraphics();
+        g.drawImage(image,
+                0, 0,
+                width, height,
+                x, y,
+                x + width, y + height,
+                null);
+        
+        return newImage;
     }
     
 }
