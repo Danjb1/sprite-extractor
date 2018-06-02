@@ -48,6 +48,8 @@ How strict the program should be when determining whether a pixel belongs to the
 
 In **exact mode**, a pixel in the source image will only be considered part of the background if this many neighbouring pixels also match the background. This helps prevent rare cases where a pixel in the sprite just happens to be the exact same colour as the background at that location.
 
+If a pixel matches the background but does *not* have the required number of valid neighbours, it will be highlighted, for manual inspection. This can be disabled by editing `SpriteExtractor.DebugFlags`.
+
 *Recommended: 0-2*
 
 In **smart mode**, a pixel in the source image will only be considered part of the background if this many neighbouring pixels match the expected values "learned" from the background image.

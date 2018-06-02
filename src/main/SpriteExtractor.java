@@ -49,7 +49,7 @@ public class SpriteExtractor {
          * 
          * Only applicable in EXACT mode.
          */
-        public static final boolean HIGHLIGHT_UNCERTAIN_PIXELS = false;
+        public static final boolean HIGHLIGHT_UNCERTAIN_PIXELS = true;
 
         /**
          * Colour used with HIGHLIGHT_UNCERTAIN_PIXELS.
@@ -410,6 +410,12 @@ public class SpriteExtractor {
             }
         });
 
+        if (imageFiles == null) {
+            System.out.println("Invalid source directory: " +
+                    dir.getAbsolutePath());
+            System.exit(1);
+        }
+        
         if (imageFiles.length == 0) {
             System.out.println("No image files found in directory: " + 
                     dir.getAbsolutePath());
